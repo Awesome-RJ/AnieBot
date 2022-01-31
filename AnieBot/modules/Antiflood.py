@@ -17,7 +17,7 @@ I expected some arguments! Either `off`, or an integer. eg: `/setflood 5`, or `/
 """
 
 
-@Abot(pattern="^/setfloodmode ?(.*)")
+@Cbot(pattern="^/setfloodmode ?(.*)")
 async def _(event):
     if event.is_private:
         return  # connect
@@ -64,7 +64,7 @@ async def _(event):
     )
 
 
-@Abot(pattern="^/setflood ?(.*)")
+@Cbot(pattern="^/setflood ?(.*)")
 async def _(event):
     if (
         event.text.startswith("/setfloodmode")
@@ -103,7 +103,7 @@ async def _(event):
     await event.reply(text)
 
 
-@Abot(pattern="^/flood")
+@Cbot(pattern="^/flood")
 async def _(event):
     if event.is_private:
         return  # connect
