@@ -1,4 +1,4 @@
-from neko.modules import db
+from AnieBot.modules import db
 
 sudo_m = db.sudo
 
