@@ -530,7 +530,7 @@ async def x_sticker_set(e):
         await e.reply(str(x))
 
 
-@Abot(pattern="^/(setgdesc|setgdescription)(?: |$|@MissNeko_Bot)(.*)")
+@Abot(pattern="^/(setgdesc|setgdescription)(?: |$|@Aniebot_robot)(.*)")
 async def x_description(e):
     if not e.is_channel:
         return await e.reply("This command is made to be used in groups!")
