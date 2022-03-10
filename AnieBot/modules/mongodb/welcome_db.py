@@ -23,17 +23,11 @@ def set_welcome(chat_id: int, w_text, id=None, hash=None, ref=None, type=None):
 
 
 def get_welcome(chat_id: int):
-    _w = welcome.find_one({"chat_id": chat_id})
-    if _w:
-        return _w
-    return None
+    return _w if (_w := welcome.find_one({"chat_id": chat_id})) else None
 
 
 def get_welcome_mode(chat_id: int):
-    _w = welcome.find_one({"chat_id": chat_id})
-    if _w:
-        return _w["mode"]
-    return True
+    return _w["mode"] if (_w := welcome.find_one({"chat_id": chat_id})) else True
 
 
 def toggle_welcome(chat_id: int, mode):
@@ -77,10 +71,7 @@ def set_goodbye(chat_id: int, w_text, id=None, hash=None, ref=None, type=None):
 
 
 def get_goodbye(chat_id: int):
-    _w = goodbye.find_one({"chat_id": chat_id})
-    if _w:
-        return _w
-    return None
+    return _w if (_w := goodbye.find_one({"chat_id": chat_id})) else None
 
 
 def toggle_goodbye(chat_id: int, mode):
@@ -107,10 +98,7 @@ def reset_goodbye(chat_id: int):
 
 
 def get_goodbye_mode(chat_id: int):
-    _w = goodbye.find_one({"chat_id": chat_id})
-    if _w:
-        return _w["mode"]
-    return False
+    return _w["mode"] if (_w := goodbye.find_one({"chat_id": chat_id})) else False
 
 
 def set_clean_service(chat_id, mode):
@@ -144,8 +132,7 @@ def set_goodbye_id(chat_id, id):
 
 
 def get_clean_service(chat_id):
-    _c = clean_service.find_one({"chat_id": chat_id})
-    if _c:
+    if _c := clean_service.find_one({"chat_id": chat_id}):
         try:
             return _c["service"]
         except KeyError:
@@ -154,8 +141,7 @@ def get_clean_service(chat_id):
 
 
 def get_clean_welcome(chat_id):
-    _c = clean_service.find_one({"chat_id": chat_id})
-    if _c:
+    if _c := clean_service.find_one({"chat_id": chat_id}):
         try:
             return _c["welcome"]
         except KeyError:
@@ -164,8 +150,7 @@ def get_clean_welcome(chat_id):
 
 
 def get_clean_goodbye(chat_id):
-    _c = clean_service.find_one({"chat_id": chat_id})
-    if _c:
+    if _c := clean_service.find_one({"chat_id": chat_id}):
         try:
             return _c["goodbye"]
         except KeyError:
@@ -174,8 +159,7 @@ def get_clean_goodbye(chat_id):
 
 
 def get_welcome_id(chat_id):
-    _c = clean_service.find_one({"chat_id": chat_id})
-    if _c:
+    if _c := clean_service.find_one({"chat_id": chat_id}):
         try:
             return _c["welcome_id"]
         except KeyError:
@@ -184,8 +168,7 @@ def get_welcome_id(chat_id):
 
 
 def get_goodbye_id(chat_id):
-    _c = clean_service.find_one({"chat_id": chat_id})
-    if _c:
+    if _c := clean_service.find_one({"chat_id": chat_id}):
         try:
             return _c["goodbye_id"]
         except KeyError:

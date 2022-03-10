@@ -50,8 +50,7 @@ spam = {}
 
 
 def spam_check(user_id):
-    x = spam.get(user_id)
-    if x:
+    if x := spam.get(user_id):
         count, mark = x
         if int(time.time() - mark) < 3:
             count += 1

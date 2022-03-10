@@ -34,7 +34,7 @@ def file_ids(msg):
 
 
 def id_tofile(file_id, access_hash, file_reference, type):
-    if file_id == None:
+    if file_id is None:
         return None
     if type == "doc":
         return types.InputDocument(
@@ -50,10 +50,9 @@ def id_tofile(file_id, access_hash, file_reference, type):
             sizes=[7108],
         )
     elif type == "geo":
-        geo_file = types.InputMediaGeoPoint(
+        return types.InputMediaGeoPoint(
             types.InputGeoPoint(float(file_id), float(access_hash))
         )
-        return geo_file
 
 
 @Abot(pattern="^/filter ?(.*)")
@@ -65,12 +64,14 @@ async def add_filter(event):
         or event.text.startswith("+filters")
     ):
         return
-    if event.from_id:
-        if not isinstance(event.from_id, types.PeerUser):
-            return
-    if event.is_group and event.from_id:
-        if not await can_change_info(event, event.sender_id):
-            return
+    if event.from_id and not isinstance(event.from_id, types.PeerUser):
+        return
+    if (
+        event.is_group
+        and event.from_id
+        and not await can_change_info(event, event.sender_id)
+    ):
+        return
     file_id = file_reference = access_hash = type = None
     try:
         f_text = event.text.split(None, 1)[1]
@@ -90,7 +91,7 @@ async def add_filter(event):
         reply = reply_msg.text or "Nil"
         if reply_msg.reply_markup:
             reply = reply + get_reply_msg_btns_text(reply_msg)
-    elif f_text:
+    else:
         _total = f_text
         _t = _total.split(None, 1)
         if len(_t) == 1:
@@ -132,7 +133,7 @@ async def filter_trigger(event):
     if not snips:
         return
     for snip in snips:
-        pattern = r"( |^|[^\w])" + re.escape(snip) + r"( |$|[^\w])"
+        pattern = f"( |^|[^\\w]){re.escape(snip)}( |$|[^\\w])"
         if re.search(pattern, name, flags=re.IGNORECASE):
             filter = snips[snip]
             file = id_tofile(
@@ -164,8 +165,7 @@ async def filter_trigger(event):
 async def filter(event):
     if event.is_private:
         return
-    snips = db.get_all_filters(event.chat_id)
-    if snips:
+    if snips := db.get_all_filters(event.chat_id):
         text = "<b>Filters in {}:</b>".format(event.chat.title)
         for snip in snips:
             text += "\n- <code>{}</code>".format(snip)
@@ -200,10 +200,12 @@ async def estop(event):
 async def delallfilters(event):
     if event.is_private:
         return
-    if event.is_group:
-        if event.from_id:
-            if not await is_owner(event, event.sender_id):
-                return
+    if (
+        event.is_group
+        and event.from_id
+        and not await is_owner(event, event.sender_id)
+    ):
+        return
     buttons = [
         [Button.inline("Delete all filters", data="stopall")],
         [Button.inline("Cancel", data="cancelstopall")],

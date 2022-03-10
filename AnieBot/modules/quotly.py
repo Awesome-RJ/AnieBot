@@ -67,11 +67,7 @@ async def qoutly_api(e):
                     }
                 elif reply.sender:
                     name = reply.sender.first_name
-                    name = (
-                        name + " " + reply.sender.last_name
-                        if reply.sender.last_name
-                        else name
-                    )
+                    name = f'{name} {reply.sender.last_name}' if reply.sender.last_name else name
                     reply_msg = {
                         "chatId": e.chat_id,
                         "first_name": reply.sender.first_name,
@@ -86,11 +82,7 @@ async def qoutly_api(e):
                 reply_msg = {}
             if isinstance(msg.sender, User):
                 _name = msg.sender.first_name
-                _name = (
-                    _name + " " + msg.sender.last_name
-                    if msg.sender.last_name
-                    else _name
-                )
+                _name = f'{_name} {msg.sender.last_name}' if msg.sender.last_name else _name
                 if msg.fwd_from and msg.fwd_from.from_name:
                     _name = msg.fwd_from.from_name
                 _first = msg.sender.first_name
@@ -166,12 +158,8 @@ async def qoutly_api(e):
                         "width": msg.file.width,
                     }
                 ]
-            else:
-                pass
             if msg.text:
                 msg.text
-            else:
-                pass
             data = {
                 "type": "quote",
                 "backgroundColor": color,

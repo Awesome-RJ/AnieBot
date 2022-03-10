@@ -121,11 +121,7 @@ async def apr_val(event):
         return await event.reply(
             "This command is made to be used in group chats, not in pm!"
         )
-    if not event.reply_to and not event.pattern_match.group(1):
-        if not event.from_id:
-            return
-        user = event.sender
-    else:
+    if event.reply_to or event.pattern_match.group(1):
         user = None
         try:
             user, xtra = await get_user(event)
@@ -133,6 +129,10 @@ async def apr_val(event):
             pass
         if not user:
             return
+    elif not event.from_id:
+        return
+    else:
+        user = event.sender
     if approve_d.find_one({"user_id": user.id, "chat_id": event.chat_id}):
         await event.reply(
             f"{user.first_name} is an approved user. Locks, antiflood, and blocklists won't apply to them."
@@ -189,9 +189,9 @@ async def a_approval(event, mode):
         except TypeError:
             if not user:
                 return
-        cb_data = str(user.id) + "|" + mode + "|" + str(user.first_name[:15])
+        cb_data = f'{str(user.id)}|{mode}|{str(user.first_name[:15])}'
     elif mode == "unapproveall":
-        cb_data = str(6) + "|" + "unapproveall" + "|" + "noise"
+        cb_data = f'{6}|unapproveall|noise'
     a_text = "It looks like you're anonymous. Tap this button to confirm your identity."
     a_button = Button.inline("Click to prove admin", data="anap_{}".format(cb_data))
     await event.reply(a_text, buttons=a_button)
@@ -204,12 +204,13 @@ async def _(event):
     user = int(user.strip())
     mode = mode.strip()
     name = name.strip()
-    if mode == "unapproveall":
-        if not await cb_is_owner(event, event.sender_id):
-            return
-    else:
-        if not await cb_can_change_info(event, event.sender_id):
-            return
+    if (
+        mode == "unapproveall"
+        and not await cb_is_owner(event, event.sender_id)
+        or mode != "unapproveall"
+        and not await cb_can_change_info(event, event.sender_id)
+    ):
+        return
     if mode == "disapprove":
         if await is_admin(event.chat_id, user):
             return await event.edit("This user is an admin, they can't be unapproved.")

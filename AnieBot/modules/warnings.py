@@ -60,7 +60,7 @@ async def set_warn__mode____(e):
             "You need to specify an action to take upon too many warns. Current modes are: ban/kick/mute/tban/tmute"
         )
     c = c.split(None, 1)
-    if not c[0] in ["ban", "kick", "mute", "tban", "tmute"]:
+    if c[0] not in ["ban", "kick", "mute", "tban", "tmute"]:
         return await e.reply(
             f"Unknown type '{c[0]}'. Please use one of: ban/kick/mute/tban/tmute"
         )
@@ -116,14 +116,15 @@ async def check_warn___settings__(e):
     chat_id = e.chat_id
     title = e.chat.title
     limit, mode, time, expiretime = db.get_warn_settings(chat_id)
-    if mode in ["ban", "tban"]:
+    if mode == "ban":
         d = "banned"
-        if mode == "tban":
-            d += "for " + str(get_time(time))
+    elif mode == "tban":
+        d = "banned"
+        d += f"for {str(get_time(time))}"
     elif mode in ["mute", "tmute"]:
         d = "muted"
         if mode == "tmute":
-            d += "for " + str(get_time(time))
+            d += f"for {str(get_time(time))}"
     elif mode == "kick":
         d = "kicked"
     if expiretime != 0:
@@ -148,7 +149,7 @@ async def reset_warns___(e):
         user, xtra = await get_user(e)
     except:
         pass
-    if user == None:
+    if user is None:
         return
     reset = db.reset_warns(user.id, e.chat_id)
     if reset:
@@ -171,7 +172,7 @@ async def reset_all_warns_of___chat____(e):
         )
     if not e.from_id:
         return await anon_warn()
-    if not e.sender_id == OWNER_ID and not await is_owner(e, e.sender_id):
+    if e.sender_id != OWNER_ID and not await is_owner(e, e.sender_id):
         return
     await e.reply(
         f"Are you sure you would like to reset **ALL** warnings in {e.chat.title}? This action cannot be undone.",
@@ -225,10 +226,7 @@ async def warn_peepls____(e):
         pq = pq.replace(x, "")
     if e.reply_to:
         user = (await e.get_reply_message()).sender
-        if len(q) == 2:
-            reason = q[1]
-        else:
-            reason = ""
+        reason = q[1] if len(q) == 2 else ""
     elif len(q) == 2:
         q = q[1].split(" ", 1)
         u_obj = q[0]
@@ -238,10 +236,7 @@ async def warn_peepls____(e):
             user = await e.client.get_entity(u_obj)
         except (ValueError, TypeError) as rr:
             return await e.reply(str(rr))
-        if len(q) == 2:
-            reason = q[1]
-        else:
-            reason = ""
+        reason = q[1] if len(q) == 2 else ""
     else:
         return await e.reply("I can't warn nothing! Tell me to whom I should warn!")
     if not user or isinstance(user, types.Channel):
@@ -260,7 +255,7 @@ async def warn_peepls____(e):
         buttons = [
             Button.inline("Remove warn (Admin Only)", data="rmwarn_{}".format(user.id))
         ]
-        if not pq == "swarn":
+        if pq != "swarn":
             await e.respond(
                 text,
                 buttons=buttons,
@@ -275,7 +270,7 @@ async def warn_peepls____(e):
                 until_date=time.time() + int(actiontime),
                 view_messages=False,
             )
-            action = "banned for" + get_time(actiontime)
+            action = f"banned for{get_time(actiontime)}"
         elif strength == "tmute":
             await tbot.edit_permissions(
                 e.chat_id,
@@ -283,7 +278,7 @@ async def warn_peepls____(e):
                 until_date=time.time() + int(actiontime),
                 send_messages=False,
             )
-            action = "muted for" + get_time(actiontime)
+            action = f"muted for{get_time(actiontime)}"
         elif strength == "ban":
             await tbot.edit_permissions(e.chat_id, user.id, view_messages=False)
             action = "banned"
@@ -298,11 +293,9 @@ async def warn_peepls____(e):
                 num_warns, limit, user.id, user.first_name, action
             )
         )
-        qp = 0
         if reasons:
             rr = "\n<b>Reasons:</b>"
-            for reason in reasons:
-                qp += 1
+            for qp, reason in enumerate(reasons, start=1):
                 rr += "\n{}: {}".format(qp, reason)
             warn_action_notif += rr
         await e.respond(
@@ -344,9 +337,7 @@ async def warns___(e):
         r = "User <a href='tg://user?id={}'>{}</a> has {}/{} warnings."
         if reasons:
             r += "\nReasons are:"
-            qc = 0
-            for x in reasons:
-                qc += 1
+            for qc, x in enumerate(reasons, start=1):
                 r += "\n{}. {}".format(qc, x)
         await e.reply(
             r.format(user.id, user.first_name, count, limit), parse_mode="html"
@@ -366,10 +357,7 @@ async def rmwarns__(e):
     q = e.text.split(" ", 1)
     if e.reply_to:
         user = (await e.get_reply_message()).sender
-        if len(q) == 2:
-            reason = q[1]
-        else:
-            reason = ""
+        reason = q[1] if len(q) == 2 else ""
     elif len(q) == 2:
         q = q[1].split(" ", 1)
         u_obj = q[0]
@@ -379,10 +367,7 @@ async def rmwarns__(e):
             user = await e.client.get_entity(u_obj)
         except (ValueError, TypeError) as rr:
             return await e.reply(str(rr))
-        if len(q) == 2:
-            reason = q[1]
-        else:
-            reason = ""
+        reason = q[1] if len(q) == 2 else ""
     else:
         return await e.reply(
             "I can't remove warns of nothing! Tell me user whose warn should be removed!"

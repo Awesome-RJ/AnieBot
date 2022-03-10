@@ -17,14 +17,10 @@ def Abot(**args):
 
     def decorator(func):
         async def wrapper(check):
-            if check.sender_id and check.sender_id != OWNER_ID:
-                pass
             try:
                 await func(check)
             except BaseException:
                 return
-            else:
-                pass
 
         tbot.add_event_handler(wrapper, events.NewMessage(**args))
         return wrapper
@@ -66,7 +62,7 @@ def load_module(shortname):
         spec = importlib.util.spec_from_file_location(name, path)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        print("Successfully imported " + shortname)
+        print(f"Successfully imported {shortname}")
     else:
         import importlib
 
@@ -80,8 +76,8 @@ def load_module(shortname):
         mod.tbot = tbot
         mod.logger = logging.getLogger(shortname)
         spec.loader.exec_module(mod)
-        sys.modules["AnieBot.modules." + shortname] = mod
-        print("Successfully imported " + shortname)
+        sys.modules[f"AnieBot.modules.{shortname}"] = mod
+        print(f"Successfully imported {shortname}")
 
 
 path = "AnieBot/modules/*.py"

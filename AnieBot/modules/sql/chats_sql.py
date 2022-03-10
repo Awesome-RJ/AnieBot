@@ -15,14 +15,13 @@ Chats.__table__.create(checkfirst=True)
 
 
 def add_chat(chat_id: str):
-    nightmoddy = Chats(str(chat_id))
+    nightmoddy = Chats(chat_id)
     SESSION.add(nightmoddy)
     SESSION.commit()
 
 
 def rmchat(chat_id: str):
-    rmnightmoddy = SESSION.query(Chats).get(str(chat_id))
-    if rmnightmoddy:
+    if rmnightmoddy := SESSION.query(Chats).get(chat_id):
         SESSION.delete(rmnightmoddy)
         SESSION.commit()
 
@@ -35,8 +34,7 @@ def get_all_chat_id():
 
 def is_chat(chat_id: str):
     try:
-        s__ = SESSION.query(Chats).get(str(chat_id))
-        if s__:
+        if s__ := SESSION.query(Chats).get(chat_id):
             return str(s__.chat_id)
     finally:
         SESSION.close()

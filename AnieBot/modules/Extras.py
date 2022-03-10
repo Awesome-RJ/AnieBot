@@ -117,43 +117,43 @@ async def gt(event):
         pass
     try:
         company = git["company"]
-        if not company == None:
+        if not company is None:
             text += f"\n<b>Company:</b> {company}"
     except KeyError:
         pass
     try:
         followers = git["followers"]
-        if not followers == None:
+        if not followers is None:
             text += f"\n<b>Followers:</b> {followers}"
     except KeyError:
         pass
     try:
         blog = git["blog"]
-        if not blog == None:
+        if not blog is None:
             text += f"\n<b>Blog:</b> <code>{blog}</code>"
     except KeyError:
         pass
     try:
         location = git["location"]
-        if not location == None:
+        if not location is None:
             text += f"\n<b>Location:</b> {location}"
     except KeyError:
         pass
     try:
         bio = git["bio"]
-        if not bio == None:
+        if not bio is None:
             text += f"\n\n<b>Bio:</b> <code>{bio}</code>"
     except KeyError:
         pass
     try:
         twitter = git["twitter_username"]
-        if not twitter == None:
+        if not twitter is None:
             text += f"\n\n<b>Twitter:</b> {twitter}"
     except KeyError:
         pass
     try:
         email = git["email"]
-        if not email == None:
+        if not email is None:
             text += f"\n<b>Email:</b> <code>{email}</code>"
     except KeyError:
         pass
@@ -192,7 +192,7 @@ async def imdb(e):
         movie_name = e.pattern_match.group(1)
         remove_space = movie_name.split(" ")
         final_name = "+".join(remove_space)
-        page = get("https://www.imdb.com/find?ref_=nv_sr_fn&q=" + final_name + "&s=all")
+        page = get(f"https://www.imdb.com/find?ref_=nv_sr_fn&q={final_name}&s=all")
         str(page.status_code)
         soup = bs4.BeautifulSoup(page.content, "lxml")
         odds = soup.findAll("tr", "odd")
@@ -212,32 +212,25 @@ async def imdb(e):
         else:
             mov_details = ""
         credits = soup.findAll("div", "credit_summary_item")
+        director = credits[0].a.text
         if len(credits) == 1:
-            director = credits[0].a.text
             writer = "Not available"
             stars = "Not available"
         elif len(credits) > 2:
-            director = credits[0].a.text
             writer = credits[1].a.text
-            actors = []
-            for x in credits[2].findAll("a"):
-                actors.append(x.text)
+            actors = [x.text for x in credits[2].findAll("a")]
             actors.pop()
-            stars = actors[0] + "," + actors[1] + "," + actors[2]
+            stars = f'{actors[0]},{actors[1]},{actors[2]}'
         else:
-            director = credits[0].a.text
             writer = "Not available"
-            actors = []
-            for x in credits[1].findAll("a"):
-                actors.append(x.text)
+            actors = [x.text for x in credits[1].findAll("a")]
             actors.pop()
-            stars = actors[0] + "," + actors[1] + "," + actors[2]
+            stars = f'{actors[0]},{actors[1]},{actors[2]}'
         if soup.find("div", "inline canwrap"):
             story_line = soup.find("div", "inline canwrap").findAll("p")[0].text
         else:
             story_line = "Not available"
-        info = soup.findAll("div", "txt-block")
-        if info:
+        if info := soup.findAll("div", "txt-block"):
             mov_country = []
             mov_language = []
             for node in info:
@@ -252,9 +245,7 @@ async def imdb(e):
                 mov_rating = r.strong["title"]
         else:
             mov_rating = "Not available"
-        file = None
-        if poster:
-            file = poster
+        file = poster or None
         await e.reply(
             "<b>Title : </b><code>"
             + mov_title
@@ -283,8 +274,6 @@ async def imdb(e):
         )
     except Exception as k:
         await e.reply(str(k))
-    except IndexError:
-        await e.reply("Please enter a valid movie name !")
 
 
 @Abot(pattern="^/math ?(.*)")
@@ -331,24 +320,23 @@ async def az(event):
 
 @Abot(pattern="^/(color|Color|Colour|colour)")
 async def colt(e):
-    api_key = "58199388-5499-4c98-b052-c679b16310f9"
     if not e.reply_to_msg_id:
         return await e.reply("Reply to an Image to add color to it!")
-    elif e.reply_to_msg_id:
-        file = await e.get_reply_message()
-        if not file.sticker and not file.photo:
-            return await e.reply(
-                "That's not an image, please reply to an Image to add color to it!"
-            )
-        ud = await e.reply("**Colourizing** the image...")
-        media = await tbot.download_media(file)
-        r = post(
-            "https://api.deepai.org/api/colorizer",
-            files={
-                "image": open(media, "rb"),
-            },
-            headers={"api-key": api_key},
+    file = await e.get_reply_message()
+    if not file.sticker and not file.photo:
+        return await e.reply(
+            "That's not an image, please reply to an Image to add color to it!"
         )
+    ud = await e.reply("**Colourizing** the image...")
+    media = await tbot.download_media(file)
+    api_key = "58199388-5499-4c98-b052-c679b16310f9"
+    r = post(
+        "https://api.deepai.org/api/colorizer",
+        files={
+            "image": open(media, "rb"),
+        },
+        headers={"api-key": api_key},
+    )
     remove(media)
     if "status" in r.json():
         return await ud.edit(r.json()["status"])
@@ -375,7 +363,7 @@ async def gps(event):
             link_preview=False,
         )
     except Exception as e:
-        await event.reply("Unable to locate that place. " + str(e))
+        await event.reply(f"Unable to locate that place. {str(e)}")
 
 
 """
@@ -536,14 +524,13 @@ async def _(event):
 
 @Abot(pattern="^/stt$")
 async def b(event):
-    if event.reply_to_msg_id:
-        reply_msg = await event.get_reply_message()
-        if not reply_msg.media:
-            return await event.reply(
-                "Reply to a voice message, to get the text out of it."
-            )
-    else:
+    if not event.reply_to_msg_id:
         return await event.reply("Reply to a voice message, to get the text out of it.")
+    reply_msg = await event.get_reply_message()
+    if not reply_msg.media:
+        return await event.reply(
+            "Reply to a voice message, to get the text out of it."
+        )
     audio = await tbot.download_media(reply_msg, "./")
     kek = await event.reply("Starting Analysis...")
     headers = {

@@ -7,10 +7,7 @@ pnotes = db.private_notes
 def save_note(chat_id, name, note, id=None, hash=None, reference=None, type=None):
     name = name.lower().strip()
     _note = notes.find_one({"chat_id": chat_id})
-    if not _note:
-        _notes = {}
-    else:
-        _notes = _note["notes"]
+    _notes = _note["notes"] if _note else {}
     _notes[name] = {
         "note": note,
         "id": id,
@@ -24,10 +21,7 @@ def save_note(chat_id, name, note, id=None, hash=None, reference=None, type=None
 def delete_note(chat_id, name):
     name = name.strip().lower()
     _note = notes.find_one({"chat_id": chat_id})
-    if not _note:
-        _notes = {}
-    else:
-        _notes = _note["notes"]
+    _notes = _note["notes"] if _note else {}
     if name in _notes:
         del _notes[name]
         notes.update_one({"chat_id": chat_id}, {"$set": {"notes": _notes}}, upsert=True)
@@ -36,18 +30,14 @@ def delete_note(chat_id, name):
 def get_note(chat_id, name):
     name = name.strip().lower()
     _note = notes.find_one({"chat_id": chat_id})
-    if not _note:
-        _notes = {}
-    else:
-        _notes = _note["notes"]
+    _notes = _note["notes"] if _note else {}
     if name in _notes:
         return _notes[name]
     return False
 
 
 def get_all_notes(chat_id):
-    _note = notes.find_one({"chat_id": chat_id})
-    if _note:
+    if _note := notes.find_one({"chat_id": chat_id}):
         return _note["notes"]
     return None
 
@@ -68,15 +58,9 @@ def change_pnotes(chat_id, mode):
 
 
 def get_pnotes(chat_id: int):
-    _p = pnotes.find_one({"chat_id": chat_id})
-    if _p:
-        return _p["mode"]
-    return False
+    return _p["mode"] if (_p := pnotes.find_one({"chat_id": chat_id})) else False
 
 
 def get_total_notes():
     _notes = notes.find({})
-    _total = 0
-    for x in _notes:
-        _total += len(x["notes"])
-    return _total
+    return sum(len(x["notes"]) for x in _notes)

@@ -25,12 +25,10 @@ from AnieBot.modules.sql.chats_sql import add_chat, is_chat
 from .. import ubot
 
 SUDO_USERS = []
-ELITES = []
 DEVS = []
 tbd = []
 
-ELITES.append(OWNER_ID)
-
+ELITES = [OWNER_ID]
 # DB
 client = MongoClient(MONGO_DB_URI)
 db = client["AnieBot"]
@@ -233,10 +231,7 @@ async def check_owner(event, user_id):
         p = await tbot(GetParticipantRequest(event.chat_id, user_id))
     except UserNotParticipantError:
         return False
-    if isinstance(p.participant, types.ChannelParticipantCreator):
-        return True
-    else:
-        return False
+    return isinstance(p.participant, types.ChannelParticipantCreator)
 
 
 async def can_del_msg(event, user_id):
@@ -263,12 +258,10 @@ async def is_admin(chat_id, user_id):
         p = await tbot(GetParticipantRequest(chat_id, user_id))
     except UserNotParticipantError:
         return False
-    if isinstance(p.participant, types.ChannelParticipantAdmin) or isinstance(
-        p.participant, types.ChannelParticipantCreator
-    ):
-        return True
-    else:
-        return False
+    return isinstance(
+        p.participant,
+        (types.ChannelParticipantAdmin, types.ChannelParticipantCreator),
+    )
 
 
 async def get_user(event):
@@ -281,10 +274,8 @@ async def get_user(event):
         user_obj = await tbot.get_entity(previous_message.sender_id)
         extra = "".join(args) if args else ""
     elif args:
-        extra = None
         user = args[0]
-        if len(args) == 2:
-            extra = args[1]
+        extra = args[1] if len(args) == 2 else None
         if user.isnumeric():
             user = int(user)
         if not user:
@@ -356,7 +347,7 @@ def g_time(time: int):
         time = int(time / (60 * 60))
         unit = "hours"
     elif time >= 60 < 3600:
-        time = int(time / 60)
+        time //= 60
         unit = "minutes"
     return " {} {}".format(time, unit)
 
@@ -397,8 +388,7 @@ def button_parser(text):
         else:
             note_data += text[prev:to_check]
             prev = match.start(1) - 1
-    else:
-        note_data += text[prev:]
+    note_data += text[prev:]
     if str(buttons) == "[]":
         buttons = None
     try:
@@ -413,17 +403,17 @@ BUTTONS = {}
 def get_reply_msg_btns_text(message):
     text = ""
     for column in message.reply_markup.rows:
-        btn_num = 0
-        for btn in column.buttons:
-            btn_num += 1
+        for btn_num, btn in enumerate(column.buttons, start=1):
             btn.text
             if btn.url:
                 btn.url
                 text += f"\n[{btn.text}](btnurl:{btn.url}*!repl!*)"
-                if btn_num > 1:
-                    text = text.replace("*!repl!*", ":same")
-                else:
-                    text = text.replace("*!repl!*", "")
+                text = (
+                    text.replace("*!repl!*", ":same")
+                    if btn_num > 1
+                    else text.replace("*!repl!*", "")
+                )
+
     return text
 
 
@@ -444,7 +434,6 @@ async def runcmd(cmd: str) -> Tuple[str, str, int, int]:
 
 def resize_image(image):
     im = Image.open(image)
-    maxsize = (512, 512)
     if (im.width and im.height) < 512:
         size1 = im.width
         size2 = im.height
@@ -461,6 +450,7 @@ def resize_image(image):
         sizenew = (size1new, size2new)
         im = im.resize(sizenew)
     else:
+        maxsize = (512, 512)
         im.thumbnail(maxsize)
     os.remove(image)
     im.save("sticker.webp")
@@ -474,10 +464,7 @@ def get_readable_time(seconds: int) -> str:
 
     while count < 4:
         count += 1
-        if count < 3:
-            remainder, result = divmod(seconds, 60)
-        else:
-            remainder, result = divmod(seconds, 24)
+        remainder, result = divmod(seconds, 60) if count < 3 else divmod(seconds, 24)
         if seconds == 0 and remainder == 0:
             break
         time_list.append(int(result))
@@ -486,7 +473,7 @@ def get_readable_time(seconds: int) -> str:
     for x in range(len(time_list)):
         time_list[x] = str(time_list[x]) + time_suffix_list[x]
     if len(time_list) == 4:
-        ping_time += time_list.pop() + ", "
+        ping_time += f'{time_list.pop()}, '
 
     time_list.reverse()
     ping_time += ":".join(time_list)
@@ -504,10 +491,7 @@ async def format_fill(event, text, tm):
         )
     if event.sender.last_name:
         last_name = ((event.sender.last_name).replace("<", "&lt;")).replace(">", "&gt;")
-    if last_name:
-        full_name = first_name + last_name
-    else:
-        full_name = first_name
+    full_name = first_name + last_name if last_name else first_name
     user_id = event.sender_id
     title = event.chat.title
     chat_id = event.chat_id
@@ -568,13 +552,10 @@ alphabet_uppercase = [
 def gen_captcha_text(max_limit=4):
     captcha_string_list = []
     base_char = alphabet_uppercase + number_list
-    for i in range(max_limit):
+    for _ in range(max_limit):
         char = choice(base_char)
         captcha_string_list.append(char)
-    captcha_string = ""
-    for item in captcha_string_list:
-        captcha_string += str(item)
-    return captcha_string
+    return "".join(str(item) for item in captcha_string_list)
 
 
 def gen_captcha(mode="text"):
@@ -601,10 +582,7 @@ def generate_captcha():
         return (randint(32, 127), randint(32, 127), randint(32, 127))
 
     def gen_wrong_answer():
-        word = ""
-        for _ in range(4):
-            word += gen_letter()
-        return word
+        return "".join(gen_letter() for _ in range(4))
 
     wrong_answers = []
     for _ in range(8):
@@ -632,7 +610,7 @@ def generate_captcha():
 
 
 def human_format(num, precision=2, suffixes=["", "K", "M", "G", "T", "P"]):
-    m = sum([abs(num / 1000.0 ** x) >= 1 for x in range(1, len(suffixes))])
+    m = sum(abs(num / 1000.0 ** x) >= 1 for x in range(1, len(suffixes)))
     return f"{num/1000.0**m:.{precision}f}{suffixes[m]}"
 
 
@@ -684,30 +662,23 @@ def translate(text, lang_de="auto", lang_to="en", p=False):
                 if len(js[0]) > 5:
                     js = js[0][5]
                 else:
-                    if not p:
-                        return js[0][0]
-                    else:
-                        return [js[0][0], None, None]
+                    return [js[0][0], None, None] if p else js[0][0]
                 translate_tt = ""
                 for x in js:
                     x = x[0]
-                    translate_tt += x.strip() + " "
+                    translate_tt += f'{x.strip()} '
                 if not p:
                     return translate_tt
-                else:
-                    p_src = json_ltd[0][0]
-                    p_tgt = json_ltd[1][0][0][1]
-                    return [translate_tt, p_src, p_tgt]
+                p_src = json_ltd[0][0]
+                p_tgt = json_ltd[1][0][0][1]
+                return [translate_tt, p_src, p_tgt]
             elif len(js) == 2:
-                sentences = []
-                for i in js:
-                    sentences.append(i[0])
+                sentences = [i[0] for i in js]
                 if not p:
                     return sentences
-                else:
-                    p_src = json_ltd[0][0]
-                    p_tgt = json_ltd[1][0][0][1]
-                    return [sentences, p_src, p_tgt]
+                p_src = json_ltd[0][0]
+                p_tgt = json_ltd[1][0][0][1]
+                return [sentences, p_src, p_tgt]
 
 
 def dt_delta(dt):

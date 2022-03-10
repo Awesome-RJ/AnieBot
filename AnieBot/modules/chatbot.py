@@ -8,9 +8,8 @@ from .mongodb.chatbot_db import is_chat, set_chatbot
 
 @Abot(pattern="^/chatbot ?(.*)")
 async def chatbot_s(e):
-    if e.is_group:
-        if not await can_change_info(e, e.sender_id):
-            return
+    if e.is_group and not await can_change_info(e, e.sender_id):
+        return
     args = e.pattern_match.group(1)
     if not args:
         mode = is_chat(e.chat_id)
@@ -36,17 +35,11 @@ async def cb(e):
         return
     if e.reply_to:
         r_e = await e.get_reply_message()
-        if r_e and r_e.sender_id:
-            pass
-        else:
+        if not r_e or not r_e.sender_id:
             return
-        if r_e.sender_id == int(BOT_ID):
-            pass
-        else:
+        if r_e.sender_id != int(BOT_ID):
             return
-    elif "AnieBot" in (e.text).lower():
-        pass
-    else:
+    elif "AnieBot" not in (e.text).lower():
         return
     q = e.text
     for x in [".", "!", "/", "?", "+"]:

@@ -24,7 +24,7 @@ async def nan(event):
     builder = event.builder
     text = event.text
     text = text.replace("@MissAnieBot_Bot", "")
-    if not text == "":
+    if text != "":
         return
     icon = InputWebDocument(
         url="https://telegra.ph/file/ee773e55c2e839255107a.jpg",
@@ -43,14 +43,12 @@ async def nan(event):
         thumb=icon,
     )
     result_2 = await gen_help(event, icon)
-    results.append(result_1)
-    results.append(result_2)
+    results.extend((result_1, result_2))
     await event.answer(results)
 
 
 def gen_status():
-    txt = "**AnieBot Info**:"
-    txt += "\nServer: Heroku"
+    txt = "**AnieBot Info**:" + "\nServer: Heroku"
     txt += "\nDatabase: MongoDB"
     txt += "\nTelethon: 1.23"
     txt += "\nPython: 3.11"
@@ -127,7 +125,7 @@ async def whisper_message__(event):
         content = "👀 The first one who open the whisper can read it"
         des = f"🤫 {query}"
         whisper_db[event.id] = des
-        cb_data = str(event.id) + "|" + "Nil"
+        cb_data = f'{str(event.id)}|Nil'
         buttons = [
             [Button.inline("👀 show message", data="show_whisper_{}".format(cb_data))],
         ]
@@ -147,9 +145,8 @@ async def whisper_message(event):
     rec_id = input[0]
     reply_to = input[1]
     print(rec_id)
-    if not reply_to == "Nil":
-        if not event.sender_id == int(reply_to):
-            return await event.answer("This was not send for you!", alert=True)
+    if reply_to != "Nil" and event.sender_id != int(reply_to):
+        return await event.answer("This was not send for you!", alert=True)
     try:
         w_message = whisper_db[int(rec_id)]
     except KeyError:
@@ -373,11 +370,11 @@ async def imdb_data_(e):
     desc = (soup.find("meta", attrs={"property": "twitter:description"})).get("content")
     genre = soup.findAll("span", attrs={"class": "ipc-chip__text"})
     genr_e = "\n**Genre:**"
-    for x in range(0, 3):
+    for x in range(3):
         if x != 2:
-            genr_e += " " + genre[x].text + ","
+            genr_e += f" {genre[x].text},"
         if x == 2:
-            genr_e += " " + genre[x].text
+            genr_e += f" {genre[x].text}"
     text = f"**[{title}]**({img})\n**Ratings:** `{rating}/10`{genr_e}\n\n`{desc}`"
     await e.edit(
         text,
@@ -428,7 +425,7 @@ async def google_search_(e):
         pop_result.append(
             await e.builder.article(
                 title=str(name),
-                description=str(desc),
+                description=desc,
                 text=text,
                 thumb=thumb,
                 parse_mode="html",
@@ -438,6 +435,7 @@ async def google_search_(e):
                 ),
             )
         )
+
     await e.answer(pop_result)
 
 
@@ -841,7 +839,7 @@ async def image_search(e):
     )
     pp = []
     i = 0
-    for x in range(0, 3):
+    for _ in range(3):
         i += 1
         path = f"dataset/{q}/Image_{i}.jpg"
         pp.append(await e.builder.photo(path))
@@ -878,13 +876,17 @@ async def geo_search_(e):
         text = f"**[{description}]**({pic_link})\n**Locality:** {title}\n**State:** {a.get('adminDistrict')}\n**Country:** {a.get('countryRegion')}, {a.get('countryRegionIso2')}"
         pop_list.append(
             await e.builder.article(
-                title=str(c[len(pop_list)]) + ". " + str(title),
+                title=f'{str(c[len(pop_list)])}. {str(title)}',
                 description=str(description),
                 text=text,
                 thumb=thumb,
                 link_preview=True,
                 buttons=[
-                    [Button.inline(title or "Map", data=f"geo_{description[:30]}")],
+                    [
+                        Button.inline(
+                            title or "Map", data=f"geo_{description[:30]}"
+                        )
+                    ],
                     [
                         Button.switch_inline(
                             "Search Again", query="geo ", same_peer=True
@@ -893,6 +895,7 @@ async def geo_search_(e):
                 ],
             )
         )
+
     await e.answer(pop_list)
 
 
@@ -932,8 +935,6 @@ async def instagram_search_(e):
                 mime_type="image/jpeg",
                 attributes=[],
             )
-        else:
-            pass
         answers.append(
             await e.builder.article(
                 title=username,
@@ -973,15 +974,9 @@ async def imdb_data_(e):
     r_new = get(rq_url, headers=usr_agent)
     soup = BeautifulSoup(r_new.content, "html.parser")
     description = soup.find("div", attrs={"class": "profile-description"})
-    if description:
-        description = description.text
-    else:
-        description = ""
+    description = description.text if description else ""
     img = soup.findAll("img")
-    if img and img[1]:
-        img = "https://gramho.com/" + img[1].get("src")
-    else:
-        img = ""
+    img = "https://gramho.com/" + img[1].get("src") if img and img[1] else ""
     name = soup.find("h2", attrs={"class": "profile-name-bottom"}).text or "User"
     posts = soup.findAll("span", attrs={"class": "black-box"})[0].text
     followers = soup.findAll("span", attrs={"class": "bold"})[0].text
@@ -1019,13 +1014,8 @@ async def sci_search_(e):
         abstract = _x.get("abstract")
         if len(abstract) > 1024:
             abstract = abstract[:1024]
-        authors = ""
-        for au in _x.get("authors"):
-            authors += " " + au.get("name") or ""
-        if _x.get("journal"):
-            book = _x.get("journal").get("name")
-        else:
-            book = ""
+        authors = "".join(" " + au.get("name") or "" for au in _x.get("authors"))
+        book = _x.get("journal").get("name") if _x.get("journal") else ""
         year = _x.get("year") or ">2010"
         text = f"**{title}**\n**Authors**: {authors}\n**Journel:** {book}\n**Released:** {year}\n\n`{abstract}`"
         description = f"Year: {year}\n{authors}\n{book}"
@@ -1126,7 +1116,7 @@ async def git_search_(e):
                 buttons=[
                     [
                         Button.url(
-                            author.strip() + ", " + repo.strip(),
+                            f'{author.strip()}, {repo.strip()}',
                             "https://github.com/{}/{}".format(
                                 author.strip(), repo.strip()
                             ),
@@ -1140,6 +1130,7 @@ async def git_search_(e):
                 ],
             )
         )
+
     await e.answer(pop)
 
 
@@ -1206,11 +1197,8 @@ async def fit_girl_search_(e):
 @Cquery(pattern="gay ?(.*)")
 async def how_gey_(e):
     q = e.pattern_match.group(1)
-    if not q:
-        name = e.sender.first_name
-    else:
-        name = q
-    percentage = str(random.randint(0, 100)) + "%"
+    name = q or e.sender.first_name
+    percentage = f'{str(random.randint(0, 100))}%'
     if not q:
         text = "🏳️‍🌈 I am {} gay!".format(percentage)
         title = "🏳️‍🌈 How gay are you?"
@@ -1268,9 +1256,7 @@ async def stack_overflow_search__(e):
         view_count = x.get("view_count")
         author = x.get("display_name")
         img = x.get("profile_image")
-        tags = ""
-        for x in tgs:
-            tags += str(x) + " "
+        tags = "".join(f'{str(x)} ' for x in tgs)
         if img:
             thumb = InputWebDocument(
                 url=img,

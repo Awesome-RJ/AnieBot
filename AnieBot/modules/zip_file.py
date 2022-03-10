@@ -21,8 +21,7 @@ from ..utils import Abot, Sammy
 
 @Abot(pattern="^/unzip")
 async def e_unzip(event):
-    x_u = x_db.find_one({"user_id": event.sender_id})
-    if x_u:
+    if x_u := x_db.find_one({"user_id": event.sender_id}):
         x_time_wait = (datetime.datetime.now() - x_u["date_added"]).total_seconds()
         x_time_wait_format = 60 - int(x_time_wait)
         if x_time_wait < 60:
@@ -31,8 +30,6 @@ async def e_unzip(event):
                     x_time_wait_format
                 )
             )
-        else:
-            pass
     x_db.update_one(
         {"user_id": event.sender_id},
         {"$set": {"date_added": datetime.datetime.now()}},
@@ -40,35 +37,32 @@ async def e_unzip(event):
     )
     if not event.reply_to:
         return
-    if event.reply_to:
-        zip_file = await event.get_reply_message()
-        if not zip_file.media:
-            return
-        if not zip_file.file.name.endswith(".zip"):
-            return await event.reply("That's not a zip file.")
-        if zip_file.file.size > 3464400:
-            return await event.reply(
-                "File size limit exceeds, The maximum file size allowed is 3.5MB."
-            )
-        x_text = """
+    zip_file = await event.get_reply_message()
+    if not zip_file.media:
+        return
+    if not zip_file.file.name.endswith(".zip"):
+        return await event.reply("That's not a zip file.")
+    if zip_file.file.size > 3464400:
+        return await event.reply(
+            "File size limit exceeds, The maximum file size allowed is 3.5MB."
+        )
+    x_text = """
 Choose appropriate action 
 
 🗃 = Normal files 
 🔓 = Password protected files 
 ❌ = Cancel Process
 """
-        x_buttons = [
-            [
-                Button.inline("Unzip🗃", data=f"unzip_{event.id}"),
-                Button.inline("Password🔓", data=f"zpassword_{event.id}"),
-            ],
-            [Button.inline("Cancel ❌", data="unzip_cancel")],
-        ]
-        await event.reply(x_text, buttons=x_buttons)
-        zip_db[event.id] = zip_file.file.name
-        await tbot.download_media(zip_file)
-    else:
-        return
+    x_buttons = [
+        [
+            Button.inline("Unzip🗃", data=f"unzip_{event.id}"),
+            Button.inline("Password🔓", data=f"zpassword_{event.id}"),
+        ],
+        [Button.inline("Cancel ❌", data="unzip_cancel")],
+    ]
+    await event.reply(x_text, buttons=x_buttons)
+    zip_db[event.id] = zip_file.file.name
+    await tbot.download_media(zip_file)
 
 
 @Sammy(pattern="unzip_cancel")
@@ -114,7 +108,7 @@ async def unzip_e(e):
     x_files = os.listdir(unzip_dir)
     zip_info_db[zip_f] = x_files
     for q_file in x_files:
-        zip_files_db[q_file] = unzip_dir + "/"
+        zip_files_db[q_file] = f'{unzip_dir}/'
     x_bt = paginate_zip(0, x_files, zip_f)
     await e.edit("Choose the required Option...", buttons=x_bt)
 
@@ -189,7 +183,7 @@ def paginate_zip(page, zip_files, x_name, back_btn=False):
     if max_num_pages == 0:
         max_num_pages = 1
     modulo_page = page % max_num_pages
-    cb_data = str(modulo_page) + "|" + str(x_name)
+    cb_data = f'{str(modulo_page)}|{str(x_name)}'
     if len(pairs) <= 4:
         x_a = (Button.inline("ALL", data="unz_send_all"),)
         x_b = (

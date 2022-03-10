@@ -17,20 +17,17 @@ AD.__table__.create(checkfirst=True)
 
 
 def add_ad(chat_id: str, mode):
-    ad = SESSION.query(AD).get(str(chat_id))
+    ad = SESSION.query(AD).get(chat_id)
     if ad:
         ad.mode = mode
     else:
-        ad = AD(str(chat_id), mode)
+        ad = AD(chat_id, mode)
     SESSION.add(ad)
     SESSION.commit()
 
 
 def ad_settings(chat_id: str):
     try:
-        s__ = SESSION.query(AD).get(str(chat_id))
-        if s__:
-            return s__.mode
-        return False
+        return s__.mode if (s__ := SESSION.query(AD).get(chat_id)) else False
     finally:
         SESSION.close()

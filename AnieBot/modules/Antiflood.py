@@ -30,7 +30,7 @@ async def _(event):
         )
     supported = ["ban", "mute", "kick", "tban", "tmute"]
     options = options.split()
-    if not options[0] in supported:
+    if options[0] not in supported:
         return await event.reply(
             f"Unknown type '{options}'. Please use one of: ban/kick/mute/tban/tmute"
         )
@@ -136,16 +136,16 @@ async def flood_control(fx):
     suffix = f"Yeah, I don't like yout flooding.\n**{fx.sender.first_name}** has been "
     flmd = db.get_flood_settings(fx.chat_id)
     if flmd[0] == "ban":
-        await fx.reply(suffix + "banned!")
+        await fx.reply(f'{suffix}banned!')
         await tbot.edit_permissions(fx.chat_id, fx.sender_id, view_messages=False)
     elif flmd[0] == "kick":
-        await fx.reply(suffix + "kicked!")
+        await fx.reply(f'{suffix}kicked!')
         await tbot.kick_participant(fx.chat_id, fx.sender_id)
     elif flmd[0] == "mute":
-        await fx.reply(suffix + "muted!")
+        await fx.reply(f'{suffix}muted!')
         await tbot.edit_permissions(fx.chat_id, fx.sender_id, send_messages=False)
     elif flmd[0] == "tban":
-        await fx.reply(suffix + "banned for " + str(get_time(flmd[1])))
+        await fx.reply(f'{suffix}banned for {str(get_time(flmd[1]))}')
         await tbot.edit_permissions(
             fx.chat_id,
             fx.sender_id,
@@ -153,7 +153,7 @@ async def flood_control(fx):
             until_date=time.time() + flmd[1],
         )
     elif flmd[0] == "tmute":
-        await fx.reply(suffix + "muted for " + str(get_time(flmd[1])))
+        await fx.reply(f'{suffix}muted for {str(get_time(flmd[1]))}')
         await tbot.edit_permissions(
             fx.chat_id,
             fx.sender_id,
